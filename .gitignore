@@ -1,0 +1,29 @@
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# Python & Jupyter
+__pycache__/
+*.py[cod]
+*$py.class
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Virtual Environments
+venv/
+.venv/
+env/
+.env
+
+# Temporary / Generated Data & Media
+local_chunks/
+chunks/
+*.mp4
+*.pkl
+*.parquet
+my_qrcode.png
+agent-card.json
+uv.lock
+nohup.out
+index_builder.log
+qrcode.png
