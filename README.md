@@ -85,11 +85,12 @@ chmod +x ./install.sh
 | 0 | 필수 GCP API 활성화 (Vector Search, Vertex AI, Cloud Run 등) | ~1분 |
 | 1 | 파이썬 패키지 설치 (`google-cloud-vectorsearch`, `google-genai` 등) | ~1분 |
 | 2 | GCS 버킷 생성 (`gs://${PROJECT_ID}-vs2`, `asia-northeast1`) | 즉시 |
-| 3 | 상품 임베딩 데이터셋 복사 | ~10초 |
-| 4 | **인덱스 빌더를 백그라운드로 구동** (`session2_index_builder.py`) | 20~40분 |
+| 3 | Artifact Registry 리포 생성 (`cloud-run-source-deploy`, Part 2 배포용) | 즉시 |
+| 4 | 상품 임베딩 데이터셋 복사 | ~10초 |
+| 5 | **인덱스 빌더를 백그라운드로 구동** (`session2_index_builder.py`) | 20~40분 |
 
 > [!IMPORTANT]
-> 4번은 **백그라운드에서 계속 돌아갑니다.** 스크립트가 끝나도 인덱싱은 진행 중입니다.
+> 5번은 **백그라운드에서 계속 돌아갑니다.** 스크립트가 끝나도 인덱싱은 진행 중입니다.
 > 이 시간이 이론 1 + 실습 1 구간에 흡수되므로, 그대로 두고 **Part 1을 시작하면 됩니다.**
 
 진행 상황은 아래로 볼 수 있습니다.

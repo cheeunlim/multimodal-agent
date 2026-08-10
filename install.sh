@@ -37,7 +37,13 @@ pip install --quiet --upgrade google-cloud-vectorsearch fsspec pandas gcsfs goog
 echo "2. Creating GCS bucket (Location: asia-northeast1)..."
 gcloud storage buckets create gs://${PROJECT_ID}-vs2 --location=asia-northeast1 || true
 
-echo "3. Copying dataset to the created GCS bucket..."
+echo "3. Creating the Artifact Registry repo used by Cloud Run source deploys..."
+gcloud artifacts repositories create cloud-run-source-deploy \
+    --repository-format=docker \
+    --location=asia-northeast1 \
+    --project="${PROJECT_ID}" || true
+
+echo "4. Copying dataset to the created GCS bucket..."
 if ! gcloud storage cp gs://jk-amazon-products-index/compact-records/amazon-product-dataset-768-compact.jsonl gs://${PROJECT_ID}-vs2/data/; then
     echo ""
     echo "Error: could not read gs://jk-amazon-products-index/ (the shared dataset bucket)."
@@ -45,7 +51,7 @@ if ! gcloud storage cp gs://jk-amazon-products-index/compact-records/amazon-prod
     exit 1
 fi
 
-echo "4. Starting the index builder in the background..."
+echo "5. Starting the index builder in the background..."
 nohup python3 session2_index_builder.py > index_builder.log 2>&1 &
 echo "   PID $!  |  Progress: tail -f index_builder.log"
 
