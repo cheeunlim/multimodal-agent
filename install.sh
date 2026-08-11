@@ -24,6 +24,7 @@ echo "0. Enabling required GCP APIs (idempotent, may take ~1 min on a fresh proj
 gcloud services enable \
     vectorsearch.googleapis.com \
     aiplatform.googleapis.com \
+    generativelanguage.googleapis.com \
     discoveryengine.googleapis.com \
     run.googleapis.com \
     cloudbuild.googleapis.com \

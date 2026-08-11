@@ -5,7 +5,7 @@
 *   **실습 노트북**: [multimodal_search.ipynb](multimodal_search.ipynb)
 *   **실행 환경**: GCP Workbench (JupyterLab)
 *   **소요 시간**: 약 30분 (코드 셀 18개 + 정리용 Raw 셀 1개)
-*   **인증**: 프로젝트 ADC (`genai.Client(vertexai=True, ...)`) — **API 키 입력 단계가 없습니다**
+*   **인증**: 프로젝트 ADC (`genai.Client(vertexai=True, ...)`)
 
 ---
 
@@ -35,15 +35,15 @@ NumPy로 직접 짠 코사인 유사도와 `SimpleBM25`는 "검색 엔진 내부
 | 4 | 전처리 | FFmpeg 스트림 복사로 10초 단위 청킹 | ~15초 |
 | 5 | 임베딩 | `generate_multimodal_embedding()` 정의 | 즉시 |
 | 6 | 임베딩 | 청크 10개 **병렬** 임베딩 (`ThreadPoolExecutor`) | ~20초 |
-| 7 | 분석 | 코사인 유사도 — 최유사 / 최이질 세그먼트 + 프레임 비교 | ~3초 |
+| 7 | 분석 | 코사인 유사도 — 최유사 / 최이질 세그먼트 + **인라인 영상 3개 나란히 재생** | ~6초 |
 | 8 | 분석 | **t-SNE 시간축 궤적 시각화** | ~3초 |
-| 9 | 검색 | Dense 단독 시맨틱 검색 (크로스모달 체감) | ~3초 |
+| 9 | 검색 | Dense 단독 시맨틱 검색 (크로스모달 체감) — 상위 3개 구간 인라인 재생 | ~6초 |
 | 10 | 캡션 | Gemini Flash 청크 설명문 **병렬** 생성 | ~25초 |
 | 11 | 검색 | `SimpleBM25` 구현 + 토크나이저 | 즉시 |
 | 12 | 검색 | `alpha` 가중치 하이브리드 (0.8 vs 0.3 대조) | ~5초 |
 | 13 | 데이터 | 레지스트리 로드(135MB) + **약 1,000건 서브샘플링** + `"Me"` 태그를 데이터 필드로 부여 | ~30초 |
 | 14 | **VS2** | **병렬 배치 업서트** (250건 × 4배치) | ~20초 |
-| 15 | **VS2** | ⭐ **동일 질의 3-way 비교** (로컬 완전탐색 / 로컬 하이브리드 / VS2 kNN) + 지연시간 | ~5초 |
+| 15 | **VS2** | ⭐ **동일 질의 3가지 방식 비교** (로컬 완전탐색 / 로컬 하이브리드 / VS2 kNN) + 지연시간 | ~5초 |
 | 16 | **VS2** | `semantic_search` + `text_search`를 `batch_search` 내장 **RRF**로 융합 | ~5초 |
 | 17 | **VS2** | `filter={"tag": {"$eq": "Me"}}` 개인화 필터 | ~5초 |
 | 18 | 최적화 | Ranking API 리랭킹 + 비디오 크라우딩 필터 | ~8초 |
@@ -64,7 +64,7 @@ NumPy로 직접 짠 코사인 유사도와 `SimpleBM25`는 "검색 엔진 내부
     | `MAX_WORKERS` | 6번 셀 | 임베딩 생성 · 캡션 생성 (10번 셀에서도 재사용) | 8 |
     | `UPSERT_WORKERS` | 14번 셀 | `BatchCreateDataObjects` 배치 전송 | 8 |
 
-    둘 다 드라이런 실측 최적값입니다. 429(Resource Exhausted)가 보이면 4로 낮추고, 16으로 올리면 스로틀링으로 오히려 느려집니다.
+    429(Resource Exhausted)가 보이면 4로 낮추고, 16으로 올리면 스로틀링이 걸려 오히려 느려집니다.
 3.  **ANN 인덱스 미생성 (kNN 완전탐색 사용)**
     Vector Search 2.0은 **인덱스가 없어도** 시맨틱 검색·전문검색·RRF 하이브리드·메타데이터 필터를 모두 수행합니다.
     1만 건 기준 인덱스 생성은 약 30분이 걸리므로 Part 1에서는 만들지 않고, Part 2에서 ANN(ScaNN) 인덱스가 걸린 컬렉션과 대조합니다.
@@ -75,7 +75,7 @@ NumPy로 직접 짠 코사인 유사도와 `SimpleBM25`는 "검색 엔진 내부
 
 1.  **노트북 실행**: JupyterLab 왼쪽 패널에서 `part1` > `multimodal_search.ipynb`를 더블 클릭합니다.
 2.  **순서대로 실행**: 1번 셀에서 커널이 1회 자동 재시작됩니다. 재시작 후 **처음 셀부터** 다시 순서대로 실행하세요.
-3.  **키 입력 없음**: 2번 셀은 Workbench의 서비스 계정 자격 증명(ADC)을 그대로 사용합니다. `GeminiLabKey` 는 Part 2의 Cloud Run 배포에서만 필요합니다.
+3.  **인증**: 2번 셀은 Workbench의 서비스 계정 자격 증명(ADC)을 그대로 사용합니다.
 4.  **질의 바꿔 보기**: `DENSE_QUERY`, `HYBRID_QUERY`, `COMPARE_QUERY`, `RRF_QUERY`, `FILTER_QUERY`, `RERANK_QUERY` 상수를 바꾸면 검색어가 바뀝니다.
 
 ---
