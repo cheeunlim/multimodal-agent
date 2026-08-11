@@ -50,7 +50,6 @@ smx-multimodal-agent/
 
 > [!NOTE]
 > 이 키는 **Part 2의 Cloud Run 배포에서만** 사용합니다 (Gemini Live API 호출용).
-> Part 1 노트북은 프로젝트 ADC 자격 증명을 그대로 쓰므로 키 입력 단계가 없습니다.
 
 <br>
 

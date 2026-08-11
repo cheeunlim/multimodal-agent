@@ -55,8 +55,7 @@ gcloud run deploy lens-mosaic \
   --min-instances 1 --max-instances 1 --execution-environment=gen2
 ```
 
-`--allow-unauthenticated` 플래그가 배포와 동시에 공개 접근을 허용하므로,
-예전처럼 콘솔에서 Authentication 설정을 따로 만질 필요가 없습니다.
+`--allow-unauthenticated` 플래그가 배포와 동시에 공개 접근을 허용합니다.
 
 명령을 실행했으면 **완료를 기다리지 말고 2단계로 넘어가세요.** 빌드는 백그라운드에서 계속 진행됩니다.
 
@@ -105,7 +104,7 @@ gcloud vector-search operations list --location=asia-northeast1
 출력 해석 방법은 저장소 루트 `README.md` 의 "백그라운드 작업 상태 점검" 절을 참고하세요.
 
 > 노트북이 사용하는 파이썬 패키지(`google-cloud-vectorsearch`, `google-genai`,
-> `google-cloud-discoveryengine`, `Pillow`)는 모두 `install.sh` 가 설치해 둡니다. 별도 설치 셀이 없습니다.
+> `google-cloud-discoveryengine`, `Pillow`)는 모두 `install.sh` 가 설치해 둡니다.
 
 ---
 
