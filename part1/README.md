@@ -110,7 +110,7 @@ vector_schema = {
 
 ## **주요 기술 스택**
 
-*   **Google GenAI SDK** (`google-genai`) — `gemini-embedding-2` / `gemini-3.6-flash`
+*   **Google GenAI SDK** (`google-genai`) — `gemini-embedding-2` / `gemini-3.7-flash`
 *   **Vertex AI Vector Search 2.0** (`google-cloud-vectorsearch`) — 서버리스 컬렉션, kNN 검색, 내장 RRF
 *   **Vertex AI Ranking API** (`google-cloud-discoveryengine`) — 매니지드 리랭커
 *   **FFmpeg Muxer** — 무손실 스트림 복사 세그먼팅
