@@ -12,7 +12,7 @@
 
 | # | 구분 | 내용 |
 | :--- | :--- | :--- |
-| 1 | 환경 준비 | Qwiklabs 진입 → API Key 확인 → `git clone` → `install.sh` (아래 절차) |
+| 1 | 환경 준비 | Qwiklabs 진입 → Gemini API Key 발급 (AI Studio) → `git clone` → `install.sh` (아래 절차) |
 | 2 | 이론 1 | 크로스모달 임베딩 / Dense·Sparse·하이브리드 / RRF / 리랭킹 |
 | 3 | **실습 1** | [`part1/`](part1/) — 청킹 → 임베딩 → 원리 검증 → Vector Search 2.0 검색·필터·리랭킹 |
 | 4 | 배포 시작 | `gcloud run deploy` 실행 후 **기다리지 않고** 이론 2로 이동 |
@@ -40,16 +40,21 @@ smx-multimodal-agent/
 
 # 실습 준비 (약 10분)
 
-## 1. Gemini API Key 확인
+## 1. Gemini API Key 발급 (Google AI Studio)
 
-#### 1-1. 메뉴에서 `credential` 을 검색해 진입합니다.
-![image](https://raw.githubusercontent.com/jk1333/handson/main/images/7/1.png)
+Part 2의 실시간 쇼핑 에이전트(Gemini Live API) 구동에 필요한 API Key를 발급받습니다.
 
-#### 1-2. 생성돼 있는 `GeminiLabKey` 의 `Show key` 를 눌러 값을 복사해 둡니다.
-![image](https://raw.githubusercontent.com/jk1333/handson/main/images/7/2.png)
+#### 1-1. [Google AI Studio](https://aistudio.google.com/app/apikey) 에 접속합니다.
+> Qwiklabs 실습용 계정(또는 개인 Google 계정)으로 로그인되어 있는지 확인합니다.
+
+#### 1-2. **`Create API key`** (또는 `API 키 만들기`) 버튼을 클릭합니다.
+* 프로젝트 선택 드롭다운에서 현재 실습 중인 GCP 프로젝트(또는 기본 프로젝트)를 선택하고 키를 생성합니다.
+
+#### 1-3. 생성된 API Key를 복사하여 **메모장에 붙여 넣어 둡니다.**
 
 > [!NOTE]
-> 이 키는 **Part 2의 Cloud Run 배포에서만** 사용합니다 (Gemini Live API 호출용).
+> 이 키는 **Part 2의 Cloud Run 배포에서만** 환경 변수(`GEMINI_API_KEY`)로 사용합니다.
+> (Part 1 및 Part 2 노트북은 Workbench의 ADC 인증을 사용하므로 키 입력이 필요 없습니다.)
 
 <br>
 
