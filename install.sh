@@ -53,7 +53,9 @@ if ! gcloud storage cp gs://jk-amazon-products-index/compact-records/amazon-prod
 fi
 
 echo "5. Starting the index builder in the background..."
-nohup python3 session2_index_builder.py > index_builder.log 2>&1 &
+# -u 필수: 출력이 파일로 리다이렉트되면 파이썬이 stdout 을 8KB 블록 버퍼링한다.
+# 진행 로그가 짧아서 버퍼가 안 차고, tail -f 로 봐도 수십 분간 빈 화면만 보인다.
+nohup python3 -u session2_index_builder.py > index_builder.log 2>&1 &
 echo "   PID $!  |  Progress: tail -f index_builder.log"
 
 echo ""
