@@ -150,9 +150,10 @@ time.sleep(10)
 # ---------------------------------------------------------
 # 4. Step 3 & 4: Index 생성
 # ---------------------------------------------------------
-# 두 인덱스는 서로 독립이다. 예전에는 text 인덱스의 LRO 완료를 기다린 뒤에야
-# image 인덱스를 요청했는데, 인덱싱이 대기 시간을 넘기면 예외로 스크립트가 끝나
-# image 인덱스는 요청조차 되지 않았다. 그래서 요청을 먼저 둘 다 던지고 나중에 함께 기다린다.
+# 한 컬렉션에 인덱스 생성 요청은 한 번에 하나만 큐잉된다. 앞 인덱스가 만들어지는
+# 중에 다음 인덱스를 요청하면 409 Aborted (unable to queue the operation) 가 난다.
+# 그래서 순차로 요청하되, 앞 인덱스에서 무슨 일이 생겨도 (대기 타임아웃이든 요청
+# 실패든) 다음 인덱스 요청까지는 반드시 도달하도록 요청·대기를 모두 감싼다.
 def request_index(index_field: str):
     def _action():
         index_id = f"idx-{index_field.replace('_', '-')}"
@@ -177,14 +178,14 @@ def request_index(index_field: str):
 
     return execute_with_step_retry(f"Index 생성 요청 [{index_field}]", _action)
 
-index_ops = [
-    (field, request_index(field))
-    for field in ("text_embedding", "image_embedding")
-]
-
 # 인덱스가 아직 없어도 검색은 kNN 완전탐색으로 동작한다. 따라서 대기 중 실패해도
 # 워크숍을 멈추지 않고, 무엇이 남았는지 알려주기만 한다.
-for field, op in index_ops:
+for field in ("text_embedding", "image_embedding"):
+    try:
+        op = request_index(field)
+    except Exception as e:
+        print(f"⚠️ Index ({field}) 생성 요청 실패: {e}")
+        continue
     if op is None:  # 이미 존재
         continue
     try:
