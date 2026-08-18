@@ -91,7 +91,7 @@ chmod +x ./install.sh
 | 2 | GCS 버킷 생성 (`gs://${PROJECT_ID}-vs2`, `asia-northeast1`) | 즉시 |
 | 3 | Artifact Registry 리포 생성 (`cloud-run-source-deploy`, Part 2 배포용) | 즉시 |
 | 4 | 상품 임베딩 데이터셋 복사 | ~10초 |
-| 5 | **인덱스 빌더를 백그라운드로 구동** (`session2_index_builder.py`) | 20~40분 |
+| 5 | **인덱스 빌더를 백그라운드로 구동** (`session2_index_builder.py`) | 임포트 ~10분, 이후 인덱스 |
 
 > [!IMPORTANT]
 > 5번은 **백그라운드에서 계속 돌아갑니다.** 스크립트가 끝나도 인덱싱은 진행 중입니다.
@@ -145,9 +145,15 @@ gcloud vector-search operations list --location=asia-northeast1 \
 | 3 | 텍스트 인덱스 생성 (`.../indexes/idx-text-embedding`) | 아니오 |
 | 4 | 이미지 인덱스 생성 (`.../indexes/idx-image-embedding`) | 아니오 |
 
-**1번과 2번만 `done: true` 면 실습 2를 바로 진행할 수 있습니다** (약 20분).
+**1번과 2번만 `done: true` 면 실습 2를 바로 진행할 수 있습니다** (약 10분).
 인덱스(3·4번)가 아직 없어도 검색은 **kNN 완전탐색**으로 정상 동작하며, 조금 느릴 뿐입니다.
 노트북 10번 단계에서 인덱스 유무를 직접 출력해 확인합니다.
+
+> [!NOTE]
+> **인덱스는 한 컬렉션에 하나씩 순차로 만들어집니다.** 3번이 끝나야 4번이 요청되므로,
+> 진행 중에는 위 목록에 LRO가 **3개까지만** 보입니다. 정상입니다.
+> 인덱스 하나에 **10만 건 기준 한 시간 남짓** 걸리므로 4번은 실습이 끝날 때까지도
+> 진행 중일 수 있습니다. 검색에는 지장이 없습니다.
 
 개별 작업을 자세히 보려면:
 

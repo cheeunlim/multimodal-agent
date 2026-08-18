@@ -152,8 +152,11 @@ time.sleep(10)
 # ---------------------------------------------------------
 # 한 컬렉션에 인덱스 생성 요청은 한 번에 하나만 큐잉된다. 앞 인덱스가 만들어지는
 # 중에 다음 인덱스를 요청하면 409 Aborted (unable to queue the operation) 가 난다.
-# 그래서 순차로 요청하되, 앞 인덱스에서 무슨 일이 생겨도 (대기 타임아웃이든 요청
-# 실패든) 다음 인덱스 요청까지는 반드시 도달하도록 요청·대기를 모두 감싼다.
+# 빌드가 얼마나 걸릴지 미리 알 수 없으므로(99,426건 실측 약 68분) 대기 타임아웃에
+# 기대지 않는다. 큐가 열릴 때까지 일정 간격으로 요청을 다시 던지기만 하면 된다.
+INDEX_QUEUE_DEADLINE = 10800  # 큐가 열릴 때까지 최대 3시간
+INDEX_QUEUE_POLL = 120        # 재요청 간격 (초)
+
 def request_index(index_field: str):
     def _action():
         index_id = f"idx-{index_field.replace('_', '-')}"
@@ -168,32 +171,60 @@ def request_index(index_field: str):
             index=index,
         )
 
-        op = vector_search_service_client.create_index(
-            request=create_index_req,
-            retry=custom_retry,
-            timeout=120.0
-        )
-        print(f"📨 Index ({index_field}) 생성 요청됨 at {datetime.now()}")
-        return op
+        started = time.time()
+        while True:
+            try:
+                op = vector_search_service_client.create_index(
+                    request=create_index_req,
+                    retry=custom_retry,
+                    timeout=120.0
+                )
+                print(f"📨 Index ({index_field}) 생성 요청됨 at {datetime.now()}")
+                return op
+            except exceptions.Conflict as e:
+                # 409 는 두 가지다. AlreadyExists 는 바깥에서 "이미 존재"로 처리하므로 넘긴다.
+                if isinstance(e, exceptions.AlreadyExists):
+                    raise
+                # 나머지 409(Aborted, unable to queue)는 앞 인덱스가 아직 만들어지는
+                # 중이라는 뜻이다. 에러가 아니라 차례를 기다리는 상태다.
+                waited = int(time.time() - started)
+                if waited > INDEX_QUEUE_DEADLINE:
+                    raise
+                print(f"⏳ [{datetime.now().strftime('%H:%M:%S')}] Index ({index_field}) 큐 대기 중 "
+                      f"— 앞 인덱스 빌드가 끝나면 자동으로 요청됩니다 ({waited // 60}분 경과)")
+                time.sleep(INDEX_QUEUE_POLL)
 
     return execute_with_step_retry(f"Index 생성 요청 [{index_field}]", _action)
 
-# 인덱스가 아직 없어도 검색은 kNN 완전탐색으로 동작한다. 따라서 대기 중 실패해도
+# 인덱스가 아직 없어도 검색은 kNN 완전탐색으로 동작한다. 따라서 무엇이 실패해도
 # 워크숍을 멈추지 않고, 무엇이 남았는지 알려주기만 한다.
+# 요청을 먼저 다 걸어 둔 뒤에 대기한다 — image_embedding 요청이 text_embedding
+# 빌드 완료를 기다리는 동안 큐를 계속 두드리므로, 별도의 순서 제어가 필요 없다.
+pending = []
+unfinished = []
+
 for field in ("text_embedding", "image_embedding"):
     try:
         op = request_index(field)
     except Exception as e:
         print(f"⚠️ Index ({field}) 생성 요청 실패: {e}")
+        unfinished.append(field)
         continue
-    if op is None:  # 이미 존재
-        continue
+    if op is not None:  # None 이면 이미 존재하는 인덱스다
+        pending.append((field, op))
+
+for field, op in pending:
     try:
-        wait_for_lro_clean(op, timeout_seconds=2400, poll_interval=15)
+        wait_for_lro_clean(op, timeout_seconds=INDEX_QUEUE_DEADLINE, poll_interval=60)
         print(f"✅ Index ({field}) created at {datetime.now()}")
     except Exception as e:
         print(f"⚠️ Index ({field}) 대기 중 문제 발생: {e}")
         print(f"   서버측 작업은 계속 진행 중일 수 있습니다. 아래로 확인하세요:")
         print(f"   gcloud vector-search operations list --location={LOCATION}")
+        unfinished.append(field)
 
-print(f"\n🎉 모든 파이프라인 작업이 성공적으로 완료되었습니다! ({datetime.now()})")
+if unfinished:
+    print(f"\n⚠️ 파이프라인 종료 ({datetime.now()}) — 아직 준비되지 않은 인덱스: {', '.join(unfinished)}")
+    print("   인덱스가 없어도 검색은 kNN 완전탐색으로 정상 동작합니다. 실습을 그대로 진행하세요.")
+else:
+    print(f"\n🎉 모든 파이프라인 작업이 성공적으로 완료되었습니다! ({datetime.now()})")
