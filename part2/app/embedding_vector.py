@@ -318,7 +318,7 @@ def _image_similarity_collection_search(image: bytes) -> tuple[list[dict], float
 
 
 def _text_similarity_collection_search(text: str) -> tuple[list[dict], float, float]:
-    """Search Gemini Embedding 2 collections with the image embedding field only."""
+    """Search Gemini Embedding 2 collections with the text embedding field only."""
     embedding, embed_ms = _generate_query_embedding(text=text)
     search_started_at = perf_counter()
     request = vectorsearch_v1beta.SearchDataObjectsRequest(
