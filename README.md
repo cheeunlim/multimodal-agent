@@ -2,7 +2,7 @@
 
 **Gemini Embedding 2 + Vector Search 2.0 으로 크로스모달 검색 엔진을 만들고, 실시간 쇼핑 에이전트로 배포합니다.**
 
--   https://github.com/cheeunlim/smx-multimodal-agent
+-   https://github.com/cheeunlim/multimodal-agent
 
 ![image](https://raw.githubusercontent.com/jk1333/handson/main/images/7/0.jpg)
 
@@ -28,7 +28,7 @@
 ## 폴더 구조
 
 ```
-smx-multimodal-agent/
+multimodal-agent/
 ├── part1/                      # 실습 1 — 멀티모달 검색 원리 (노트북 + README)
 ├── part2/                      # 실습 2 — VS2 검색 엔진 + 에이전트 배포 (노트북 + app/ + README)
 ├── install.sh                  # 실습 환경 프로비저닝 스크립트
@@ -69,7 +69,7 @@ Part 2의 실시간 쇼핑 에이전트(Gemini Live API) 구동에 필요한 API
 #### 2-3. Terminal에 진입해 실습자료를 내려받습니다.
 
 ```bash
-git clone https://github.com/cheeunlim/smx-multimodal-agent
+git clone https://github.com/cheeunlim/multimodal-agent
 ```
 
 <br>
@@ -77,7 +77,7 @@ git clone https://github.com/cheeunlim/smx-multimodal-agent
 ## 3. 환경 프로비저닝
 
 ```bash
-cd ~/smx-multimodal-agent
+cd ~/multimodal-agent
 chmod +x ./install.sh
 ./install.sh
 ```
@@ -164,7 +164,7 @@ gcloud vector-search operations describe <OPERATION_NAME> --location=asia-northe
 ### 인덱싱이 멈춘 것 같다면
 
 ```bash
-tail -30 ~/smx-multimodal-agent/index_builder.log
+tail -30 ~/multimodal-agent/index_builder.log
 ```
 
 빌더가 중간에 끝났다면 컬렉션과 데이터는 이미 올라가 있으므로,

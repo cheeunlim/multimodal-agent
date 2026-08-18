@@ -45,7 +45,7 @@ part2/
 `(Y/n)` 선택이 나오면 엔터를 입력합니다.
 
 ```bash
-cd ~/smx-multimodal-agent/part2
+cd ~/multimodal-agent/part2
 gcloud run deploy lens-mosaic \
   --source . \
   --region "asia-northeast1" \
@@ -124,7 +124,7 @@ gcloud run services describe lens-mosaic --region asia-northeast1 --format="valu
 `-------CLOUD RUN URL-------` 을 복사한 주소로 교체 후 실행합니다.
 
 ```bash
-cd ~/smx-multimodal-agent/part2
+cd ~/multimodal-agent/part2
 python qr.py -------CLOUD RUN URL------- -o my_qrcode.png
 ```
 
@@ -210,7 +210,7 @@ Agent Card로 내보내고, Agent Registry에 등록해 검색되는지 확인�
 #### 1. Agent Card 생성
 
 ```bash
-cd ~/smx-multimodal-agent/part2
+cd ~/multimodal-agent/part2
 python download_agent_card.py -------CLOUD RUN URL-------
 ```
 
