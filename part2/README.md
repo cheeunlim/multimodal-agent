@@ -29,17 +29,17 @@ part2/
 
 | 단계 | 소요 | 내용 |
 | :--- | :--- | :--- |
-| **1** | 약 1분 | **Cloud Run 배포 명령 실행** — 실습 1이 끝나면 바로. 빌드 완료를 기다리지 않고 **이론 2** 로 이동 |
-| **2** | 약 25분 | `vector_search_agent.ipynb` 실습 (시작 시점엔 이미 배포 빌드가 끝나 있습니다) |
+| **1** | 약 1분 | **Cloud Run 배포 명령 실행** — 실습 1 완료 후 실행 (백그라운드 빌드 진행 중 **이론 2** 로 이동) |
+| **2** | 약 25분 | `vector_search_agent.ipynb` 실습 (시작 시점엔 이미 배포 빌드가 완료되어 있습니다) |
 | **3** | 약 10분 | QR 코드 생성 → 스마트폰에서 라이브 데모 |
 
-> **중요**: 1단계와 2단계의 순서를 바꾸지 마세요.
-> Cloud Run 소스 빌드에 약 5분이 걸리는데, 배포를 먼저 걸어두면 그 시간이 **이론 2 시간에 그대로 흡수**됩니다.
-> 터미널 한 개에서 배포를 실행해 두고, **같은 터미널을 닫지 않은 채** 강의로 돌아가면 됩니다.
+> **진행 순서 안내**: 1단계(배포)를 2단계(노트북 실습)보다 먼저 진행해 주세요.
+> Cloud Run 소스 빌드에 약 5분이 소요되므로, 배포 명령을 먼저 실행해 두면 빌드가 진행되는 동안 원활하게 **이론 2 세션**을 진행할 수 있습니다.
+> 터미널에서 배포 명령을 실행해 둔 상태로 강의 세션에 참여하시면 됩니다.
 
 ---
 
-## 1단계. Cloud Run 배포 시작 (기다리지 마세요)
+## 1단계. Cloud Run 배포 시작 (백그라운드 빌드)
 
 `-----GEMINI_API_KEY-----` 부분을 실습 준비 단계(1번)에서 **Google AI Studio**를 통해 발급받은 API Key로 교체한 뒤 실행합니다.
 `(Y/n)` 선택이 나오면 엔터를 입력합니다.
@@ -57,7 +57,7 @@ gcloud run deploy lens-mosaic \
 
 `--allow-unauthenticated` 플래그가 배포와 동시에 공개 접근을 허용합니다.
 
-명령을 실행했으면 **완료를 기다리지 마세요.** 빌드는 백그라운드에서 계속 진행되며, 이어지는 이론 2 동안 완료됩니다.
+배포 명령을 실행한 후 빌드 완료를 대기할 필요 없이 다음 단계(이론 2)로 진행합니다. 빌드는 백그라운드에서 계속 진행되며, 이어지는 이론 세션 동안 완료됩니다.
 
 > **참고**: 배포 명령이 `allUsers` 바인딩 실패로 끝나면 조직 정책(Domain Restricted Sharing) 때문입니다.
 > 이 경우 아래 [폴백 — 콘솔에서 공개 접근 허용하기](#폴백--콘솔에서-공개-접근-허용하기) 절차를 따르세요.
@@ -73,8 +73,8 @@ JupyterLab에서 `part2/vector_search_agent.ipynb` 를 열고 셀을 위에서�
 실습 준비 단계에서 실행한 `install.sh` 가 `amazon-product-768-compact` 컬렉션과 약 10만 건의 상품 데이터를
 백그라운드로 올려 두었으므로, **이 노트북은 컬렉션이나 인덱스를 만들지 않습니다.**
 프로비저닝 대기 시간이 0이며, 첫 셀부터 바로 검색을 실행합니다.
-(ScaNN 인덱스 2개도 같은 스크립트가 만들지만, **아직 완성되지 않았어도 실습에는 지장이 없습니다.**
-인덱스가 없으면 kNN 완전탐색으로 처리되며 조금 느릴 뿐입니다 — 10번 단계에서 직접 확인합니다.)
+(ScaNN 인덱스 생성이 진행 중이더라도 kNN 완전탐색 방식으로 검색이 정상 동작하므로 실습 진행에는 지장이 없습니다.
+인덱스 적용 전후의 차이는 10단계에서 직접 확인합니다.)
 
 | # | 내용 |
 | :--- | :--- |
@@ -87,7 +87,7 @@ JupyterLab에서 `part2/vector_search_agent.ipynb` 를 열고 셀을 위에서�
 | 7 | **[핵심] RRF 가중치 실험** — `[1.35, 0.65]` ↔ `[0.65, 1.35]` |
 | 8 | Ranking API 리랭킹 |
 | 9 | 메타데이터 필터 결합 |
-| 10 | ANN(ScaNN) vs kNN — 코드는 그대로, 속도만 다르다 |
+| 10 | ANN(ScaNN) vs kNN — 동일한 코드에서의 성능 최적화 비교 |
 | 11 | `app/embedding_vector.py` 소스 대조 |
 | 12 | 에이전트 프롬프트와 `find_items` 툴 호출 흐름 |
 
@@ -100,7 +100,7 @@ gcloud vector-search operations list --location=asia-northeast1
 ```
 
 **컬렉션 생성**과 **데이터 임포트** 두 작업이 `done: true` 이면 노트북 전체를 실행할 수 있습니다.
-인덱스 생성 작업 2개는 아직 진행 중이어도 검색은 동작합니다(인덱스 없이 kNN 완전탐색으로 처리되며, 조금 느릴 뿐입니다).
+인덱스 생성 작업 2개는 진행 중이더라도 검색은 정상 동작합니다(인덱스 없이도 kNN 완전탐색 방식으로 처리됩니다).
 출력 해석 방법은 저장소 루트 `README.md` 의 "백그라운드 작업 상태 점검" 절을 참고하세요.
 
 > 노트북이 사용하는 파이썬 패키지(`google-cloud-vectorsearch`, `google-genai`,
@@ -164,8 +164,7 @@ python qr.py -------CLOUD RUN URL------- -o my_qrcode.png
 
 ## 폴백 — 콘솔에서 공개 접근 허용하기
 
-> 이 절차는 **`--allow-unauthenticated` 가 조직 정책(Domain Restricted Sharing, DRS)에 막혀
-> 실패했을 때만** 수행합니다. 배포가 정상적으로 끝났다면 건너뛰세요.
+> 본 절차는 조직 정책(Domain Restricted Sharing, DRS)으로 인해 `--allow-unauthenticated` 설정이 제한되었을 경우에만 진행합니다. 배포가 정상 완료된 경우에는 건너뛰셔도 됩니다.
 
 DRS 정책이 켜져 있는 프로젝트에서는 `allUsers` 에 대한 IAM 바인딩이 거부될 수 있습니다.
 이때는 서비스만 배포된 상태이므로, 콘솔에서 공개 접근을 직접 켜 줍니다.
@@ -204,8 +203,8 @@ gcloud run services add-iam-policy-binding lens-mosaic \
 
 ## (보너스) Agent Registry 등록 및 검색 테스트
 
-시간이 남는 참가자를 위한 선택 과제입니다. 배포한 에이전트를 A2A(Agent-to-Agent) 프로토콜용
-Agent Card로 내보내고, Agent Registry에 등록해 검색되는지 확인합니다.
+추가 실습을 원하시는 분들을 위한 선택 과정입니다. 배포한 에이전트를 A2A(Agent-to-Agent) 프로토콜용
+Agent Card로 내보내고, Agent Registry에 등록하여 검색 동작을 확인합니다.
 
 #### 1. Agent Card 생성
 
@@ -234,8 +233,8 @@ gcloud alpha agent-registry agents search --location=global --search-string="쇼
 
 ## 실습 완료!
 
-`install.sh` 로 만든 Vector Search 컬렉션과 GCS 버킷은 Qwiklab 세션이 끝나면 함께 정리됩니다.
-개인 프로젝트에서 실습했다면 아래로 직접 정리하세요.
+`install.sh` 로 생성한 Vector Search 컬렉션과 GCS 버킷은 Qwiklabs 실습 세션 종료 시 자동으로 정리됩니다.
+개인 GCP 프로젝트에서 실습하신 경우 아래 명령어로 직접 리소스를 정리할 수 있습니다.
 
 ```bash
 gcloud run services delete lens-mosaic --region asia-northeast1

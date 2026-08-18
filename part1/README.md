@@ -13,15 +13,15 @@
 
 > **로컬 연산은 원리를 보여주는 glass box, 최종 결과는 Vector Search 2.0이 반환한다.**
 
-NumPy로 직접 짠 코사인 유사도와 `SimpleBM25`는 "검색 엔진 내부에서 실제로 일어나는 연산"을 열어 보이기 위한 교육 장치입니다.
-같은 질의를 매니지드 서비스로 다시 실행해 **결과와 지연시간을 나란히 대조**하는 것이 이 노트북의 핵심(15번 셀)입니다.
+NumPy로 직접 구현한 코사인 유사도와 `SimpleBM25`는 검색 엔진 내부에서 실제로 수행되는 연산 과정을 이해하기 위한 교육용 구현입니다.
+동일한 질의를 관리형 서비스(Vector Search 2.0)로 실행하여 **결과와 지연시간을 나란히 비교**하는 것이 이 노트북의 핵심(15번 셀)입니다.
 
-| 개념 | 직접 짜 보는 것 | Vector Search 2.0 |
+| 개념 | 로컬 직접 구현 | Vector Search 2.0 |
 | :--- | :--- | :--- |
 | 유사도 연산 | NumPy 코사인 완전탐색 | `semantic_search` (kNN) |
 | 키워드 검색 | `SimpleBM25` | `text_search(data_field_names=["description"])` |
 | 가중치 결합 | `alpha * dense + (1-alpha) * sparse` | `ReciprocalRankFusion(weights=[...])` |
-| 개인화 | 설명문에 태그 문자열 결합 | `filter={"tag": {"$eq": "Me"}}` |
+| 개인화 | 메타데이터 태그 부여 | `filter={"tag": {"$eq": "Me"}}` |
 
 ---
 
@@ -64,7 +64,7 @@ NumPy로 직접 짠 코사인 유사도와 `SimpleBM25`는 "검색 엔진 내부
     | `MAX_WORKERS` | 6번 셀 | 임베딩 생성 · 캡션 생성 (10번 셀에서도 재사용) | 8 |
     | `UPSERT_WORKERS` | 14번 셀 | `BatchCreateDataObjects` 배치 전송 | 8 |
 
-    429(Resource Exhausted)가 보이면 4로 낮추고, 16으로 올리면 스로틀링이 걸려 오히려 느려집니다.
+    API 할당량 초과(429 Resource Exhausted)가 발생할 경우 값을 4로 조정할 수 있으며, 동시성을 과도하게 높이면 스로틀링으로 인해 처리 속도가 저하될 수 있습니다.
 3.  **ANN 인덱스 미생성 (kNN 완전탐색 사용)**
     Vector Search 2.0은 **인덱스가 없어도** 시맨틱 검색·전문검색·RRF 하이브리드·메타데이터 필터를 모두 수행합니다.
     1만 건 기준 인덱스 생성은 약 30분이 걸리므로 Part 1에서는 만들지 않고, Part 2에서 ANN(ScaNN) 인덱스가 걸린 컬렉션과 대조합니다.
@@ -102,9 +102,8 @@ vector_schema = {
 }
 ```
 
-> 값을 채우지도 않던 `description_embedding`(SparseVectorField)은 제거했습니다.
-> 희소 검색은 `description` **데이터 필드**를 `text_search`로 직접 검색하는 방식으로 대체됩니다.
-> 마찬가지로 업서트에서 값을 넣지 않던 `start` / `end` 도 스키마에서 뺐습니다 (선언만 되고 쓰이지 않는 필드는 혼란만 줍니다).
+> [!NOTE]
+> 본 실습에서는 스키마를 단순화하기 위해 미사용 필드를 정리했습니다. 희소 검색은 별도의 Sparse Vector 필드 대신 `description` **데이터 필드**를 `text_search`로 직접 검색하는 방식을 사용하며, 실습에 불필요한 메타데이터 필드는 스키마에서 제외했습니다.
 
 ---
 
@@ -119,5 +118,5 @@ vector_schema = {
 ---
 
 > [!WARNING]
-> 워크숍이 모두 끝난 뒤에는 **19번 Raw 셀의 타입을 `Code`로 바꿔 실행**하여 서버리스 컬렉션을 삭제해 주세요.
-> Part 2는 별도의 상품 컬렉션(`amazon-product-768-compact`)을 사용하므로, 이 셀은 **맨 마지막**에 실행하면 됩니다.
+> 전체 실습이 모두 완료된 후에는 **19번 Raw 셀의 타입을 `Code`로 변경하여 실행**함으로써 서버리스 컬렉션을 정리해 주세요.
+> Part 2 실습은 별도의 상품 컬렉션(`amazon-product-768-compact`)을 사용하므로, 이 자원 정리 셀은 전체 실습의 **맨 마지막**에 실행하시면 됩니다.
