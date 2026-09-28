@@ -70,38 +70,36 @@ gcloud run deploy lens-mosaic \
 JupyterLab에서 `part2/vector_search_agent.ipynb` 를 열고 셀을 위에서부터 순서대로 실행합니다.
 (`Ctrl + Enter` 또는 메뉴의 `Run > Run Selected Cell`)
 
-실습 준비 단계에서 실행한 `install.sh` 가 `amazon-product-768-compact` 컬렉션과 약 10만 건의 상품 데이터를
+실습 준비 단계에서 실행한 `install.sh` 가 `amazon-product-768-compact` 컬렉션과 약 10만 건(99,426건)의 상품 데이터를
 백그라운드로 올려 두었으므로, **이 노트북은 컬렉션이나 인덱스를 만들지 않습니다.**
 프로비저닝 대기 시간이 0이며, 첫 셀부터 바로 검색을 실행합니다.
-(ScaNN 인덱스 생성이 진행 중이더라도 kNN 완전탐색 방식으로 검색이 정상 동작하므로 실습 진행에는 지장이 없습니다.
-인덱스 적용 전후의 차이는 10단계에서 직접 확인합니다.)
+(ScaNN 인덱스 생성이 진행 중이더라도 kNN 완전탐색 방식으로 검색이 정상 동작하므로 실습 진행에는 지장이 없습니다.)
 
 | # | 내용 |
 | :--- | :--- |
-| 1 | 클라이언트 초기화 및 컬렉션 핸들 |
-| 2 | 백그라운드 인덱싱 완료 확인 |
+| 1 | 클라이언트 초기화 · 계정/프로젝트 확인 및 컬렉션 핸들 |
+| 2 | 백그라운드 인덱싱 완료 및 에러 로그(`index_builder.log`) 확인 |
 | 3 | 컬렉션 스키마 확인 — dense 벡터 필드 2개의 의미 |
 | 4 | 상품 카탈로그 프리뷰 + 공용 헬퍼 정의 |
 | 5 | 텍스트 질의 ➔ `text_embedding` 검색 |
 | 6 | 이미지 질의 ➔ `image_embedding` 검색 (크로스모달) |
 | 7 | **[핵심] RRF 가중치 실험** — `[1.35, 0.65]` ↔ `[0.65, 1.35]` |
 | 8 | Ranking API 리랭킹 |
-| 9 | 메타데이터 필터 결합 |
-| 10 | ANN(ScaNN) vs kNN — 동일한 코드에서의 성능 최적화 비교 |
-| 11 | `app/embedding_vector.py` 소스 대조 |
-| 12 | 에이전트 프롬프트와 `find_items` 툴 호출 흐름 |
+| 9 | 에이전트 프롬프트와 `find_items` 툴 호출 흐름 |
+| 10 | **(선택) 나노바나나(Nano Banana)로 테스트용 상품 이미지 생성하기** 🎨 |
 
 ### 노트북 실행 전 확인
 
-컬렉션 준비 상태는 노트북 2번 단계에서 확인하지만, 터미널에서 미리 볼 수도 있습니다.
+컬렉션 준비 상태와 빌더 로그는 **노트북 2번 단계 셀에서 바로 출력**되며, 터미널에서 미리 볼 수도 있습니다.
 
 ```bash
 gcloud vector-search operations list --location=asia-northeast1
+tail -n 20 ~/multimodal-agent/index_builder.log
 ```
 
-**컬렉션 생성**과 **데이터 임포트** 두 작업이 `done: true` 이면 노트북 전체를 실행할 수 있습니다.
+**컬렉션 생성**과 **데이터 임포트** 두 작업이 `done: True` 이면 노트북 전체를 실행할 수 있습니다.
 인덱스 생성 작업 2개는 진행 중이더라도 검색은 정상 동작합니다(인덱스 없이도 kNN 완전탐색 방식으로 처리됩니다).
-출력 해석 방법은 저장소 루트 `README.md` 의 "백그라운드 작업 상태 점검" 절을 참고하세요.
+출력 해석 및 409 에러/계정 트러블슈팅 방법은 저장소 루트 [`README.md`](../README.md#자주-발생하는-에러--트러블슈팅-가이드) 를 참고하세요.
 
 > 노트북이 사용하는 파이썬 패키지(`google-cloud-vectorsearch`, `google-genai`,
 > `google-cloud-discoveryengine`, `Pillow`)는 모두 `install.sh` 가 설치해 둡니다.
@@ -130,33 +128,39 @@ python qr.py -------CLOUD RUN URL------- -o my_qrcode.png
 
 생성된 `my_qrcode.png` 파일을 열고, 스마트폰 카메라로 인식해 에이전트를 실행합니다.
 
-#### 3. 테스트용 이미지 만들기 (선택)
+#### 3. 테스트용 이미지 준비하기 — 나노바나나(Nano Banana) 활용 🎨
 
-주변에 마땅한 상품이 없다면 이미지를 생성해서 화면에 띄워놓고 카메라로 비춰도 됩니다.
+현장에서 카메라로 비출 실물 소품이 다양하지 않다면, **나노바나나(`gemini-2.5-flash-image`)** 로 원하는 상품을 생성하거나 직접 그림을 그려 노트북 화면에 크게 띄워 놓고 스마트폰 카메라로 비춰 보세요!
 
-1. 클라우드 콘솔에서 `studio` 를 검색해 Agent Platform Studio 로 진입합니다.
-2. 좌측 상단 `+` 버튼 → `Image` 를 클릭합니다.
-3. 프롬프트 입력 후 생성합니다.
+*   **방법 A (노트북에서 바로 생성 — 가장 빠름)**:
+    *   `vector_search_agent.ipynb` 맨 마지막 **10번 셀(`TEST_IMAGE_PROMPT`)** 에 원하는 상품을 입력하고 실행하면 화면에 이미지가 바로 출력됩니다.
+*   **방법 B ([Google AI Studio](https://aistudio.google.com/) / 나노바나나에서 생성하거나 직접 그리기)**:
+    1.  [Google AI Studio](https://aistudio.google.com/) 에 접속해 모델로 **Nano Banana (`gemini-2.5-flash-image`)** 를 선택합니다.
+    2.  아래 **ABO 카탈로그 맞춤 프롬프트**를 입력해 이미지를 생성하거나, 간단한 스케치/그림을 그린 뒤 실사 상품 이미지로 변환해 달라고 요청합니다.
+    3.  생성된 이미지를 클릭해 화면에 크게 띄웁니다.
 
-```
-흰색 꽃무늬 원피스를 입은 여성 마네킨
-```
-
-4. 생성된 이미지를 클릭해 크게 띄웁니다.
+> [!TIP]
+> **카탈로그 맞춤 프롬프트 예시** (본 상품 카탈로그에는 가방·신발·가전·주방·조명·가구·주얼리가 풍부하며, 원피스/셔츠 같은 일반 의류는 포함되어 있지 않습니다):
+> *   가방: `빈티지 브라운 가죽 백팩 제품 사진` / `A vintage brown leather backpack on a wooden table`
+> *   헤드폰: `매트 블랙 무선 노이즈캔슬링 헤드폰` / `Matte black wireless over-ear headphones`
+> *   주방/텀블러: `민트색 스테인리스 보온 텀블러` / `A pastel mint stainless steel coffee tumbler`
+> *   조명/인테리어: `따뜻한 조명의 황동 데스크 스탠드 램프` / `A modern brass desk lamp with a warm bulb`
+> *   신발: `주황색 트레일 러닝화 운동화` / `Bright orange trail running shoes`
 
 #### 4. 음성으로 사용해 보기
 
 에이전트 우측 하단의 마이크 버튼을 눌러 음성 입력을 활성화한 뒤,
-모바일 카메라로 상품(또는 위에서 만든 이미지)을 비추면서 말해 봅니다.
+모바일 카메라로 실물 소품(또는 위에서 나노바나나로 만든 화면 속 이미지)을 비추면서 말해 봅니다.
 
 ```
-어울리는 가방을 추천해줘
+이 가방이랑 어울리는 소품을 추천해줘
+이거랑 비슷한 디자인의 다른 제품 보여줘
 ```
 
 - 화면을 비추는 것만으로 **외형이 유사한 상품이 자동으로 검색**됩니다
-  (노트북 6번 셀의 `image_embedding` 검색과 같은 경로입니다).
+  (노트북 6번 단계의 `image_embedding` 검색과 같은 경로입니다).
 - 음성으로 요구사항을 말하면 에이전트가 `find_items` 툴을 호출해 추천 상품을 렌더링합니다
-  (노트북 5번·8번 셀의 텍스트 검색 + Ranking API 리랭킹 경로입니다).
+  (노트북 5번·8번 단계의 텍스트 검색 + Ranking API 리랭킹 경로입니다).
 
 ![image](https://raw.githubusercontent.com/jk1333/handson/main/images/7/10.png)
 

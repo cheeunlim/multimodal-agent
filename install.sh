@@ -18,7 +18,12 @@ if [ -z "$PROJECT_ID" ]; then
     exit 1
 fi
 
-echo "Using Project ID: ${PROJECT_ID}"
+ACTIVE_ACCOUNT=$(gcloud config get-value account 2>/dev/null || echo "unknown")
+echo "============================================================"
+echo " Active Account : ${ACTIVE_ACCOUNT}"
+echo " Project ID     : ${PROJECT_ID}"
+echo " (Qwiklabs 실습 계정이 맞는지, PROJECT_ID가 qwiklabs-gcp-로 시작하는지 확인하세요)"
+echo "============================================================"
 
 echo "0. Enabling required GCP APIs (idempotent, may take ~1 min on a fresh project)..."
 gcloud services enable \
@@ -53,10 +58,16 @@ if ! gcloud storage cp gs://jk-amazon-products-index/compact-records/amazon-prod
 fi
 
 echo "5. Starting the index builder in the background..."
-# -u 필수: 출력이 파일로 리다이렉트되면 파이썬이 stdout 을 8KB 블록 버퍼링한다.
-# 진행 로그가 짧아서 버퍼가 안 차고, tail -f 로 봐도 수십 분간 빈 화면만 보인다.
-nohup python3 -u session2_index_builder.py > index_builder.log 2>&1 &
-echo "   PID $!  |  Progress: tail -f index_builder.log"
+EXISTING_PID=$(pgrep -f "session2_index_builder.py" || true)
+if [ -n "${EXISTING_PID}" ]; then
+    echo "⚠️  session2_index_builder.py 가 이미 실행 중입니다 (PID: ${EXISTING_PID})."
+    echo "   409 충돌 및 데이터 중복 적재를 방지하기 위해 새 프로세스를 띄우지 않습니다."
+else
+    # -u 필수: 출력이 파일로 리다이렉트되면 파이썬이 stdout 을 8KB 블록 버퍼링한다.
+    # 진행 로그가 짧아서 버퍼가 안 차고, tail -f 로 봐도 수십 분간 빈 화면만 보인다.
+    nohup python3 -u session2_index_builder.py > index_builder.log 2>&1 &
+    echo "   PID $!  |  Progress: tail -f index_builder.log"
+fi
 
 echo ""
 echo "Setup done. NOTE: the index builder is STILL RUNNING in the background."

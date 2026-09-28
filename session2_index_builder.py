@@ -8,11 +8,21 @@ from google.api_core import exceptions
 # ---------------------------------------------------------
 # 1. 인증 및 환경 설정
 # ---------------------------------------------------------
-_, PROJECT_ID = google.auth.default()
+credentials, PROJECT_ID = google.auth.default()
+ACCOUNT_EMAIL = getattr(credentials, "service_account_email", None) or "user-adc"
 LOCATION = "asia-northeast1"
 COLLECTION_ID = "amazon-product-768-compact"
+COLLECTION_NAME = f"projects/{PROJECT_ID}/locations/{LOCATION}/collections/{COLLECTION_ID}"
+
+print(f"============================================================")
+print(f" [Index Builder 시작] {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+print(f" Project ID : {PROJECT_ID}")
+print(f" Account    : {ACCOUNT_EMAIL}")
+print(f" Collection : {COLLECTION_NAME}")
+print(f"============================================================")
 
 vector_search_service_client = vectorsearch_v1.VectorSearchServiceClient()
+search_service_client = vectorsearch_v1.DataObjectSearchServiceClient()
 
 # SDK 수준 기본 Retry (단기 트랜지언트 네트워크 재시도용)
 custom_retry = google_retry.Retry(
@@ -39,8 +49,16 @@ def execute_with_step_retry(step_name, func, max_retries=5, initial_delay=30):
             print(f"[{datetime.now().strftime('%H:%M:%S')}] [{step_name}] 시도 {attempt}/{max_retries} 시작...")
             return func()
         except exceptions.AlreadyExists:
-            print(f"⚠️ [{step_name}] 리소스가 이미 존재합니다. 다음 단계로 진행합니다.")
+            print(f"ℹ️ [{step_name}] 리소스가 이미 존재합니다 (409 AlreadyExists). 다음 단계로 진행합니다.")
             return None
+        except (exceptions.Conflict, exceptions.Aborted) as e:
+            print(f"⚠️ [{step_name}] 409 충돌 감지 (선행 작업 진행 중이거나 중복 요청): {e.message}")
+            if attempt == max_retries:
+                print(f"ℹ️ [{step_name}] 기존 작업이 계속 진행 중인 것으로 간주하고 다음 단계로 넘어갑니다.")
+                return None
+            print(f"⏱️ {delay}초 대기 후 [{step_name}] 상태를 다시 확인합니다...")
+            time.sleep(delay)
+            delay *= 2
         except exceptions.GoogleAPICallError as e:
             print(f"⚠️ [{datetime.now().strftime('%H:%M:%S')}] [{step_name}] Google API 에러 발생 (Code: {e.code}): {e.message}")
             if attempt == max_retries:
@@ -124,11 +142,33 @@ time.sleep(10)
 
 
 # ---------------------------------------------------------
-# 3. Step 2: Data Import
+# 3. Step 2: Data Import (중복 적재 방지 가드 포함)
 # ---------------------------------------------------------
+def get_existing_count() -> int:
+    """컬렉션에 이미 적재된 데이터 건수를 반환합니다 (조회 실패 시 0)."""
+    try:
+        resp = search_service_client.aggregate_data_objects(
+            vectorsearch_v1.AggregateDataObjectsRequest(
+                parent=COLLECTION_NAME,
+                aggregate="COUNT",
+            )
+        )
+        rows = [dict(row) for row in resp.aggregate_results]
+        if rows and "COUNT" in rows[0]:
+            return int(rows[0]["COUNT"])
+    except Exception:
+        pass
+    return 0
+
+
 def step2_import_data():
+    existing_count = get_existing_count()
+    if existing_count > 0:
+        print(f"ℹ️ 컬렉션에 이미 데이터({existing_count:,}건)가 적재되어 있습니다. 중복 임포트를 건너뜁니다.")
+        return
+
     import_req = vectorsearch_v1.ImportDataObjectsRequest(
-        name=f"projects/{PROJECT_ID}/locations/{LOCATION}/collections/{COLLECTION_ID}",
+        name=COLLECTION_NAME,
         gcs_import={
             "contents_uri": f"gs://{PROJECT_ID}-vs2/data/",
             "error_uri": f"gs://{PROJECT_ID}-vs2/error/",
