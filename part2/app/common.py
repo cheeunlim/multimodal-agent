@@ -13,15 +13,15 @@ IMAGE_SERVER = "https://thumbnail.aidemo.dev"
 #IMAGE_SERVER = "https://storage.googleapis.com/jk-amazon-products-thumbnail"
 
 #For gemini live to use VertexAI
-#os.environ['GOOGLE_GENAI_USE_VERTEXAI'] = "TRUE"
-#os.environ['GOOGLE_CLOUD_LOCATION'] = "us-west1"
-#AGENT_MODEL = "gemini-live-2.5-flash-native-audio"
+os.environ['GOOGLE_GENAI_USE_VERTEXAI'] = "TRUE"
+os.environ['GOOGLE_CLOUD_LOCATION'] = "us"
+AGENT_MODEL = "gemini-3.8-live"
 
 #For gemini live to use AI Studio
-AGENT_MODEL = "gemini-3.1-flash-live-preview"
+#AGENT_MODEL = "gemini-3.1-flash-live-preview"
 
 #For Vector Search 2.0
-LOCATION = "asia-northeast1"
+LOCATION = "asia-southeast1"
 COLLECTION_ID = f"projects/{PROJECT_ID}/locations/{LOCATION}/collections/amazon-product-768-compact"
 #COLLECTION_ID = "projects/{PROJECT_ID}/locations/{LOCATION}/collections/amazon-product-768-compact-prebuilt"
 

@@ -10,7 +10,7 @@ from google.api_core import exceptions
 # ---------------------------------------------------------
 credentials, PROJECT_ID = google.auth.default()
 ACCOUNT_EMAIL = getattr(credentials, "service_account_email", None) or "user-adc"
-LOCATION = "asia-northeast1"
+LOCATION = "asia-southeast1"
 COLLECTION_ID = "amazon-product-768-compact"
 COLLECTION_NAME = f"projects/{PROJECT_ID}/locations/{LOCATION}/collections/{COLLECTION_ID}"
 

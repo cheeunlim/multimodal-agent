@@ -41,15 +41,14 @@ part2/
 
 ## 1단계. Cloud Run 배포 시작 (백그라운드 빌드)
 
-`-----GEMINI_API_KEY-----` 부분을 실습 준비 단계(1번)에서 **Google AI Studio**를 통해 발급받은 API Key로 교체한 뒤 실행합니다.
+아래 명령어를 실행해 Cloud Run 배포를 시작합니다. (Vertex AI ADC 인증 및 `gemini-3.8-live` 모델을 사용하므로 별도의 API Key 설정이 필요 없습니다.)
 `(Y/n)` 선택이 나오면 엔터를 입력합니다.
 
 ```bash
 cd ~/multimodal-agent/part2
 gcloud run deploy lens-mosaic \
   --source . \
-  --region "asia-northeast1" \
-  --set-env-vars GEMINI_API_KEY="-----GEMINI_API_KEY-----" \
+  --region "asia-southeast1" \
   --allow-unauthenticated \
   --concurrency 500 --cpu 2 --memory 4Gi --timeout 3600 \
   --min-instances 1 --max-instances 1 --execution-environment=gen2
@@ -93,7 +92,7 @@ JupyterLab에서 `part2/vector_search_agent.ipynb` 를 열고 셀을 위에서�
 컬렉션 준비 상태와 빌더 로그는 **노트북 2번 단계 셀에서 바로 출력**되며, 터미널에서 미리 볼 수도 있습니다.
 
 ```bash
-gcloud vector-search operations list --location=asia-northeast1
+gcloud vector-search operations list --location=asia-southeast1
 tail -n 20 ~/multimodal-agent/index_builder.log
 ```
 
@@ -114,7 +113,7 @@ tail -n 20 ~/multimodal-agent/index_builder.log
 콘솔에서 확인하려면 메뉴에서 `cloud run` 검색 → `lens-mosaic` 클릭 → 상단 URL 옆 복사 버튼을 누릅니다.
 
 ```bash
-gcloud run services describe lens-mosaic --region asia-northeast1 --format="value(status.url)"
+gcloud run services describe lens-mosaic --region asia-southeast1 --format="value(status.url)"
 ```
 
 #### 2. QR 코드 생성
@@ -198,7 +197,7 @@ DRS 정책이 켜져 있는 프로젝트에서는 `allUsers` 에 대한 IAM 바�
 
 ```bash
 gcloud run services add-iam-policy-binding lens-mosaic \
-  --region asia-northeast1 \
+  --region asia-southeast1 \
   --member="allUsers" \
   --role="roles/run.invoker"
 ```
@@ -241,6 +240,6 @@ gcloud alpha agent-registry agents search --location=global --search-string="쇼
 개인 GCP 프로젝트에서 실습하신 경우 아래 명령어로 직접 리소스를 정리할 수 있습니다.
 
 ```bash
-gcloud run services delete lens-mosaic --region asia-northeast1
+gcloud run services delete lens-mosaic --region asia-southeast1
 gcloud storage rm -r gs://$(gcloud config get-value project)-vs2
 ```

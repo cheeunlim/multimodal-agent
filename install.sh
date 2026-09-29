@@ -40,13 +40,13 @@ gcloud services enable \
 echo "1. Installing and upgrading required Python packages..."
 pip install --quiet --upgrade google-cloud-vectorsearch fsspec pandas gcsfs google-auth google-api-core google-genai google-cloud-aiplatform google-cloud-discoveryengine Pillow opencv-python numpy scikit-learn seaborn ipywidgets pyOpenSSL qrcode
 
-echo "2. Creating GCS bucket (Location: asia-northeast1)..."
-gcloud storage buckets create gs://${PROJECT_ID}-vs2 --location=asia-northeast1 || true
+echo "2. Creating GCS bucket (Location: asia-southeast1)..."
+gcloud storage buckets create gs://${PROJECT_ID}-vs2 --location=asia-southeast1 || true
 
 echo "3. Creating the Artifact Registry repo used by Cloud Run source deploys..."
 gcloud artifacts repositories create cloud-run-source-deploy \
     --repository-format=docker \
-    --location=asia-northeast1 \
+    --location=asia-southeast1 \
     --project="${PROJECT_ID}" || true
 
 echo "4. Copying dataset to the created GCS bucket..."
@@ -76,4 +76,4 @@ echo "(roughly 20-40 minutes in total). Part 2 can start before it finishes --"
 echo "searches work without indexes, just a bit slower."
 echo ""
 echo "  Check progress : tail -f index_builder.log"
-echo "  Check on GCP   : gcloud vector-search operations list --location=asia-northeast1"
+echo "  Check on GCP   : gcloud vector-search operations list --location=asia-southeast1"
