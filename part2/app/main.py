@@ -397,7 +397,13 @@ async def get_agent_card():
         from google.adk.a2a.utils.agent_card_builder import AgentCardBuilder
         builder = AgentCardBuilder(agent=agent)
         card = await builder.build()
-        card_dict = card.model_dump() if hasattr(card, "model_dump") else card.dict()
+        if hasattr(card, "model_dump"):
+            card_dict = card.model_dump()
+        elif hasattr(card, "DESCRIPTOR"):
+            from google.protobuf.json_format import MessageToDict
+            card_dict = MessageToDict(card)
+        else:
+            card_dict = card.dict()
         return clean_agent_card(card_dict)
     except Exception as exc:
         logger.error("Failed to generate Agent Card: %s", exc, exc_info=True)
