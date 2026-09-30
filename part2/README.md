@@ -41,8 +41,7 @@ part2/
 
 ## 1단계. Cloud Run 배포 시작 (백그라운드 빌드)
 
-아래 명령어를 실행해 Cloud Run 배포를 시작합니다. (Vertex AI ADC 인증 및 `gemini-3.8-live` 모델을 사용하므로 별도의 API Key 설정이 필요 없습니다.)
-`(Y/n)` 선택이 나오면 엔터를 입력합니다.
+아래 명령어를 실행해 Cloud Run 배포를 시작합니다. `(Y/n)` 선택이 나오면 엔터를 입력합니다.
 
 ```bash
 cd ~/multimodal-agent/part2
