@@ -48,18 +48,13 @@ cd ~/multimodal-agent/part2
 gcloud run deploy lens-mosaic \
   --source . \
   --region "asia-southeast1" \
-  --allow-unauthenticated \
   --concurrency 500 --cpu 2 --memory 4Gi --timeout 3600 \
   --min-instances 1 --max-instances 1 --execution-environment=gen2
 ```
 
-`--allow-unauthenticated` 플래그가 배포와 동시에 공개 접근을 허용합니다.
-
 배포 명령을 실행한 후 빌드 완료를 대기할 필요 없이 다음 단계(이론 2)로 진행합니다. 빌드는 백그라운드에서 계속 진행되며, 이어지는 이론 세션 동안 완료됩니다.
 
-> **참고**: 배포 명령이 `allUsers` 바인딩 실패로 끝나면 조직 정책(Domain Restricted Sharing) 때문입니다.
-> 이 경우 아래 [폴백 — 콘솔에서 공개 접근 허용하기](#폴백--콘솔에서-공개-접근-허용하기) 절차를 따르세요.
-> 서비스 자체는 정상적으로 배포되며, 공개 접근 설정만 수동으로 해주면 됩니다.
+> **참고**: 실습 환경의 조직 정책(Domain Restricted Sharing)으로 인해 CLI에서는 공개 접근(`allUsers`) 설정이 제한됩니다. 서비스 자체는 정상 배포되며, **3단계에서 QR 코드를 생성하기 전에 GCP 콘솔에서 공개 접근을 허용**합니다.
 
 ---
 
@@ -104,12 +99,36 @@ tail -n 20 ~/multimodal-agent/index_builder.log
 
 ---
 
-## 3단계. QR 코드 생성 및 모바일 라이브 데모
+## 3단계. 공개 접근 허용 · QR 코드 생성 및 모바일 라이브 데모
 
-#### 1. 배포 완료 확인 및 URL 복사
+스마트폰에서 에이전트에 접속하려면 **QR 코드를 만들기 전에 먼저 Cloud Run 콘솔에서 공개 접근을 허용**해야 합니다.
 
-1단계 터미널로 돌아가 배포가 끝났는지 확인하고, 출력된 Service URL을 복사합니다.
-콘솔에서 확인하려면 메뉴에서 `cloud run` 검색 → `lens-mosaic` 클릭 → 상단 URL 옆 복사 버튼을 누릅니다.
+#### 1. 콘솔에서 공개 접근 허용하기 및 URL 복사
+
+실습 환경의 조직 정책으로 인해 CLI 명령으로는 공개 접근이 허용되지 않으므로, 콘솔에서 직접 설정합니다.
+
+1. GCP 콘솔 상단 메뉴에서 `cloud run` 을 검색해 진입한 뒤 `lens-mosaic` 서비스를 클릭합니다.
+2. `Security` 탭으로 이동합니다.
+3. `Authentication` 항목에서 **`Allow public access`** 를 선택합니다.
+4. 하단의 **`Save`** 를 클릭합니다.
+
+![image](https://raw.githubusercontent.com/jk1333/handson/main/images/7/3.png)
+
+<br>
+
+![image](https://raw.githubusercontent.com/jk1333/handson/main/images/7/4.png)
+
+<br>
+
+![image](https://raw.githubusercontent.com/jk1333/handson/main/images/7/5.png)
+
+<br>
+
+![image](https://raw.githubusercontent.com/jk1333/handson/main/images/7/6.png)
+
+<br>
+
+5. 설정을 저장한 뒤, 콘솔 화면 상단 **URL** 옆의 복사 버튼을 눌러 서비스 주소를 복사합니다. (또는 터미널에서 아래 명령으로 URL을 확인할 수 있습니다.)
 
 ```bash
 gcloud run services describe lens-mosaic --region asia-southeast1 --format="value(status.url)"
@@ -161,45 +180,6 @@ python qr.py -------CLOUD RUN URL------- -o my_qrcode.png
   (노트북 5번·8번 단계의 텍스트 검색 + Ranking API 리랭킹 경로입니다).
 
 ![image](https://raw.githubusercontent.com/jk1333/handson/main/images/7/10.png)
-
----
-
-## 폴백 — 콘솔에서 공개 접근 허용하기
-
-> 본 절차는 조직 정책(Domain Restricted Sharing, DRS)으로 인해 `--allow-unauthenticated` 설정이 제한되었을 경우에만 진행합니다. 배포가 정상 완료된 경우에는 건너뛰셔도 됩니다.
-
-DRS 정책이 켜져 있는 프로젝트에서는 `allUsers` 에 대한 IAM 바인딩이 거부될 수 있습니다.
-이때는 서비스만 배포된 상태이므로, 콘솔에서 공개 접근을 직접 켜 줍니다.
-
-1. 콘솔 메뉴에서 `cloud run` 을 검색해 진입한 뒤 `lens-mosaic` 서비스를 클릭합니다.
-2. `Security` 탭으로 이동합니다.
-3. `Authentication` → `Allow public access` 를 선택합니다.
-4. `Save` 를 클릭합니다.
-
-![image](https://raw.githubusercontent.com/jk1333/handson/main/images/7/3.png)
-
-<br>
-
-![image](https://raw.githubusercontent.com/jk1333/handson/main/images/7/4.png)
-
-<br>
-
-![image](https://raw.githubusercontent.com/jk1333/handson/main/images/7/5.png)
-
-<br>
-
-![image](https://raw.githubusercontent.com/jk1333/handson/main/images/7/6.png)
-
-<br>
-
-콘솔 대신 CLI로 처리하려면 아래 명령도 사용할 수 있습니다(동일하게 DRS 영향을 받습니다).
-
-```bash
-gcloud run services add-iam-policy-binding lens-mosaic \
-  --region asia-southeast1 \
-  --member="allUsers" \
-  --role="roles/run.invoker"
-```
 
 ---
 
