@@ -154,8 +154,9 @@ def get_existing_count() -> int:
             )
         )
         rows = [dict(row) for row in resp.aggregate_results]
-        if rows and "COUNT" in rows[0]:
-            return int(rows[0]["COUNT"])
+        if rows:
+            val = rows[0].get("count", rows[0].get("COUNT", 0))
+            return int(val)
     except Exception:
         pass
     return 0
@@ -181,7 +182,7 @@ def step2_import_data():
         timeout=120.0
     )
     wait_for_lro_clean(operation, timeout_seconds=1200, poll_interval=15)
-    print(f"✅ Import data finished at {datetime.now()}")
+    print(f"✅ Import data finished at {datetime.now()} (이제 kNN 검색으로 실습을 바로 진행할 수 있습니다!)")
 
 execute_with_step_retry("Step 2: Data Import", step2_import_data)
 time.sleep(10)
@@ -230,8 +231,8 @@ def request_index(index_field: str):
                 waited = int(time.time() - started)
                 if waited > INDEX_QUEUE_DEADLINE:
                     raise
-                print(f"⏳ [{datetime.now().strftime('%H:%M:%S')}] Index ({index_field}) 큐 대기 중 "
-                      f"— 앞 인덱스 빌드가 끝나면 자동으로 요청됩니다 ({waited // 60}분 경과)")
+                print(f"⏳ [{datetime.now().strftime('%H:%M:%S')}] Index ({index_field}) 백그라운드 큐 대기 중 "
+                      f"({waited // 60}분 경과) — 데이터 적재는 완료되었으므로 기다리지 않고 실습을 진행하셔도 됩니다.")
                 time.sleep(INDEX_QUEUE_POLL)
 
     return execute_with_step_retry(f"Index 생성 요청 [{index_field}]", _action)
