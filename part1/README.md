@@ -1,4 +1,4 @@
-# **[Part 1] 멀티모달 임베딩 & Vector Search 2.0 검색 (약 30분)**
+# **[Part 1] 멀티모달 임베딩 & Vector Search 2.0 검색** (약 30분)
 
 **Gemini Embedding 2**로 비디오·이미지·텍스트를 하나의 3072차원 공간에 올리고, 그 위에서 **Vertex AI Vector Search 2.0**으로 크로스모달 하이브리드 검색을 수행하는 실습입니다.
 
@@ -19,13 +19,13 @@ NumPy로 직접 구현한 코사인 유사도(`registry_matrix @ query_vector`)�
 | 개념 | 로컬 직접 구현 | Vector Search 2.0 |
 | :--- | :--- | :--- |
 | 유사도 연산 | NumPy 코사인 완전탐색 (`@`) | `semantic_search` (kNN) |
-| 멀티모달 공간 | 비디오 청크 + 텍스트 앵커(`["빠름", "느림", "산", "바다"]`) 투영 | 3072차원 단일 통합 벡터 |
+| 멀티모달 공간 | 비디오 청크 + 텍스트 앵커 투영 | 3072차원 단일 통합 벡터 |
 | 하이브리드 검색 | — | `semantic_search` + `text_search` (`ReciprocalRankFusion`) |
 | 정밀도 리랭킹 | — | Vertex AI Ranking API |
 
 ---
 
-## **셀 구성 (14 코드 셀 + 1 Raw 셀)**
+## **셀 구성** (14 코드 셀 + 1 Raw 셀)
 
 | # | 구분 | 내용 | 예상 소요 |
 | :--- | :--- | :--- | :--- |
@@ -36,12 +36,12 @@ NumPy로 직접 구현한 코사인 유사도(`registry_matrix @ query_vector`)�
 | 5 | 임베딩 | 2단계: `generate_multimodal_embedding()` 정의 | 즉시 |
 | 6 | 임베딩 | 청크 10개 **병렬** 임베딩 (`ThreadPoolExecutor`) | ~5초 |
 | 7 | 분석 | 코사인 유사도 — 최유사 / 최이질 세그먼트 + **인라인 영상 3개 나란히 재생** | ~6초 |
-| 8 | 분석 | **t-SNE 멀티모달 궤적 시각화** — 비디오 청크 궤적 + `["빠름", "느림", "산", "바다"]` 텍스트 앵커 동시 투영 | ~4초 |
+| 8 | 분석 | **t-SNE 멀티모달 궤적 시각화** — 비디오 청크 궤적 + 텍스트 앵커 동시 투영 + 클립 드롭다운 재생 | ~4초 |
 | 9 | 검색 | Dense 단독 시맨틱 검색 (크로스모달 체감) — 상위 3개 구간 인라인 재생 | ~6초 |
 | 10 | 데이터 | 3단계: 레지스트리 로드(135MB) + **약 1,000건 서브샘플링** + 인메모리 행렬 구축 | ~10초 |
 | 11 | **VS2** | **병렬 배치 업서트** (250건 × 4배치, 409 방어 포함) | ~20초 |
 | 12 | **VS2** | ⭐ **동일 질의 비교** (① 로컬 NumPy 완전탐색 vs ② VS2 `semantic_search` kNN) + 지연시간 | ~5초 |
-| 13 | **VS2** | `semantic_search` + `text_search`를 `batch_search` 내장 **RRF (`weights`)** 로 융합 | ~5초 |
+| 13 | **VS2** | `semantic_search` + `text_search`를 `batch_search` 내장 **RRF** (`weights`)로 융합 | ~5초 |
 | 14 | 최적화 | 4단계: Vertex AI Ranking API 리랭킹 | ~5초 |
 | 15 | 정리 | 5단계: 컬렉션 삭제 (**Raw 셀** — 실수 방지를 위해 실행되지 않음) | ~1분 |
 
@@ -61,7 +61,7 @@ NumPy로 직접 구현한 코사인 유사도(`registry_matrix @ query_vector`)�
     | `UPSERT_WORKERS` | 11번 셀 | `BatchCreateDataObjects` 배치 전송 | 8 |
 
     API 할당량 초과(429 Resource Exhausted)가 발생할 경우 값을 4로 조정할 수 있습니다.
-3.  **ANN 인덱스 미생성 (kNN 완전탐색 사용)**
+3.  **ANN 인덱스 미생성** (kNN 완전탐색 사용)
     Vector Search 2.0은 **인덱스가 없어도** 시맨틱 검색·전문검색·RRF 하이브리드를 모두 수행합니다.
     인덱스 생성은 수십 분이 걸리므로 Part 1에서는 만들지 않고, Part 2에서 ScaNN 인덱스가 걸린 컬렉션을 사용합니다.
 

@@ -84,7 +84,7 @@ JupyterLab에서 `part2/vector_search_agent.ipynb` 를 열고 셀을 위에서�
 | 7 | **[핵심] RRF 가중치 실험** — `[1.35, 0.65]` ↔ `[0.65, 1.35]` |
 | 8 | Ranking API 리랭킹 |
 | 9 | 에이전트 프롬프트와 `find_items` 툴 호출 흐름 |
-| 10 | **(선택) 나노바나나(Nano Banana)로 테스트용 상품 이미지 생성하기** 🎨 |
+| 10 | **나노바나나로 테스트용 상품 이미지 생성하기** (선택) 🎨 |
 
 ### 노트북 실행 전 확인
 
@@ -128,12 +128,12 @@ python qr.py -------CLOUD RUN URL------- -o my_qrcode.png
 
 #### 3. 테스트용 이미지 준비하기 — 나노바나나(Nano Banana) 활용 🎨
 
-현장에서 카메라로 비출 실물 소품이 다양하지 않다면, **나노바나나(`gemini-2.5-flash-image`)** 로 원하는 상품을 생성하거나 직접 그림을 그려 노트북 화면에 크게 띄워 놓고 스마트폰 카메라로 비춰 보세요!
+현장에서 카메라로 비출 실물 소품이 다양하지 않다면, **나노바나나**(`gemini-2.5-flash-image`)로 원하는 상품을 생성하거나 직접 그림을 그려 노트북 화면에 크게 띄워 놓고 스마트폰 카메라로 비춰 보세요!
 
-*   **방법 A (노트북에서 바로 생성 — 가장 빠름)**:
-    *   `vector_search_agent.ipynb` 맨 마지막 **10번 셀(`TEST_IMAGE_PROMPT`)** 에 원하는 상품을 입력하고 실행하면 화면에 이미지가 바로 출력됩니다.
-*   **방법 B ([Google AI Studio](https://aistudio.google.com/) / 나노바나나에서 생성하거나 직접 그리기)**:
-    1.  [Google AI Studio](https://aistudio.google.com/) 에 접속해 모델로 **Nano Banana (`gemini-2.5-flash-image`)** 를 선택합니다.
+*   **방법 A** (노트북에서 바로 생성 — 가장 빠름):
+    *   `vector_search_agent.ipynb` 맨 마지막 **10번 셀**(`TEST_IMAGE_PROMPT`)에 원하는 상품을 입력하고 실행하면 화면에 이미지가 바로 출력됩니다.
+*   **방법 B** ([Google AI Studio](https://aistudio.google.com/) / 나노바나나에서 생성하거나 직접 그리기):
+    1.  [Google AI Studio](https://aistudio.google.com/) 에 접속해 모델로 **Nano Banana** (`gemini-2.5-flash-image`)를 선택합니다.
     2.  아래 **ABO 카탈로그 맞춤 프롬프트**를 입력해 이미지를 생성하거나, 간단한 스케치/그림을 그린 뒤 실사 상품 이미지로 변환해 달라고 요청합니다.
     3.  생성된 이미지를 클릭해 화면에 크게 띄웁니다.
 

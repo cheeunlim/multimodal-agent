@@ -96,7 +96,7 @@ tail -f index_builder.log
 ## [실습 1 — 멀티모달 검색 엔진의 원리](part1/) (25분)
 
 비디오를 10초 단위로 분할하고, Gemini Embedding 2로 텍스트·이미지·비디오를 **하나의 3072차원 벡터 공간**에 임베딩합니다.
-코사인 유사도 비교와 **비디오 궤적 + 카테고리 텍스트(`["빠름", "느림", "산", "바다"]`) 동시 t-SNE 투영**으로 멀티모달 공간을 직관적으로 확인한 뒤, 동일한 질의를 로컬 NumPy 완전탐색과 Vector Search 2.0에 각각 요청하여 결과를 대조하고 내장 RRF 하이브리드 검색·Ranking API 리랭킹까지 수행합니다.
+코사인 유사도 비교와 **비디오 궤적 + 카테고리 텍스트 동시 t-SNE 투영**으로 멀티모달 공간을 직관적으로 확인한 뒤, 동일한 질의를 로컬 NumPy 완전탐색과 Vector Search 2.0에 각각 요청하여 결과를 대조하고 내장 RRF 하이브리드 검색·Ranking API 리랭킹까지 수행합니다.
 
 ## [실습 2 — VS2 검색 엔진과 실시간 쇼핑 에이전트](part2/) (25분 + 데모 10분)
 
@@ -147,11 +147,11 @@ gcloud vector-search operations list --location=asia-southeast1 \
 
 ### 2. `409 Conflict` (`AlreadyExists` / `Aborted`) 에러가 발생할 때
 
-*   **증상 1 (`409 AlreadyExists`)**: 컬렉션 생성 셀이나 `install.sh`를 두 번 실행했을 때 리소스가 이미 존재하여 발생합니다.
+*   **증상 1** (`409 AlreadyExists`): 컬렉션 생성 셀이나 `install.sh`를 두 번 실행했을 때 리소스가 이미 존재하여 발생합니다.
     *   **대처**: 실습 코드와 `session2_index_builder.py` 모두 `409 AlreadyExists`를 자동 감지해 **기존 컬렉션/데이터를 그대로 재사용**하도록 처리되어 있으므로 에러가 아니며 그대로 다음 단계를 진행하시면 됩니다.
-*   **증상 2 (`409 Aborted: unable to queue the operation`)**: 컬렉션 하나에는 한 번에 하나의 인덱스 생성 작업만 큐에 들어갈 수 있습니다. 앞선 작업(예: `text_embedding` 인덱스)이 진행 중일 때 다음 작업이 요청되면 발생합니다.
+*   **증상 2** (`409 Aborted: unable to queue the operation`): 컬렉션 하나에는 한 번에 하나의 인덱스 생성 작업만 큐에 들어갈 수 있습니다. 앞선 작업(예: `text_embedding` 인덱스)이 진행 중일 때 다음 작업이 요청되면 발생합니다.
     *   **대처**: `session2_index_builder.py`가 앞 인덱스 빌드가 끝날 때까지 2분 간격으로 자동 대기 후 재요청하므로 무시하셔도 됩니다.
-*   **증상 3 (`install.sh` 두 번 실행으로 인한 중복 임포트 우려)**:
+*   **증상 3** (`install.sh` 두 번 실행으로 인한 중복 임포트 우려):
     *   **대처**: `install.sh`는 이미 실행 중인 `session2_index_builder.py` 프로세스가 있으면 중복 실행을 차단하며, 빌더 내부에서도 적재 건수(`COUNT > 0`)를 먼저 확인해 중복 임포트를 방지합니다.
 
 ### 3. 계정 꼬임 (`403 PermissionDenied` / 프로젝트 불일치 / 에이전트 접속 끊김)
