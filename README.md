@@ -12,7 +12,7 @@
 
 | # | 구분 | 내용 |
 | :--- | :--- | :--- |
-| 1 | 환경 준비 | Qwiklabs 진입 → Gemini API Key 발급 (AI Studio) → `git clone` → `install.sh` (아래 절차) |
+| 1 | 환경 준비 | Qwiklabs 진입 → Workbench 실행 → `git clone` → `install.sh` (아래 절차) |
 | 2 | 이론 1 | 크로스모달 임베딩 / Dense·Sparse·하이브리드 / RRF / 리랭킹 |
 | 3 | **실습 1** | [`part1/`](part1/) — 청킹 → 임베딩 → 원리 검증 → Vector Search 2.0 검색·필터·리랭킹 |
 | 4 | 배포 시작 | `gcloud run deploy` 실행 (백그라운드 빌드 진행 중 이론 2로 이동) |
@@ -40,33 +40,15 @@ multimodal-agent/
 
 # 실습 준비 (약 10분)
 
-## 1. Gemini API Key 발급 (Google AI Studio)
+## 1. Workbench 실행 및 실습자료 다운로드
 
-Part 2의 실시간 쇼핑 에이전트(Gemini Live API) 구동에 필요한 API Key를 발급받습니다.
-
-#### 1-1. [Google AI Studio](https://aistudio.google.com/app/apikey) 에 접속합니다.
-> Qwiklabs 실습용 계정(또는 개인 Google 계정)으로 로그인되어 있는지 확인합니다.
-
-#### 1-2. **`Create API key`** (또는 `API 키 만들기`) 버튼을 클릭합니다.
-* 프로젝트 선택 드롭다운에서 현재 실습 중인 GCP 프로젝트(또는 기본 프로젝트)를 선택하고 키를 생성합니다.
-
-#### 1-3. 생성된 API Key를 복사하여 **메모장에 붙여 넣어 둡니다.**
-
-> [!NOTE]
-> 이 키는 **Part 2의 Cloud Run 배포에서만** 환경 변수(`GEMINI_API_KEY`)로 사용합니다.
-> (Part 1 및 Part 2 노트북은 Workbench의 ADC 인증을 사용하므로 키 입력이 필요 없습니다.)
-
-<br>
-
-## 2. Workbench 실행 및 실습자료 다운로드
-
-#### 2-1. 상단 검색 메뉴에서 `workbench` 를 입력해 'Workbench' 메뉴를 클릭합니다.
+#### 1-1. 상단 검색 메뉴에서 `workbench` 를 입력해 'Workbench' 메뉴를 클릭합니다.
 ![image](https://raw.githubusercontent.com/jk1333/handson/main/images/6/1.png)
 
-#### 2-2. `Open Jupyterlab` 버튼을 눌러 환경에 접속합니다.
+#### 1-2. `Open Jupyterlab` 버튼을 눌러 환경에 접속합니다.
 ![image](https://raw.githubusercontent.com/cheeunlim/agent-engine-lab/main/images/workbench_open.png)
 
-#### 2-3. Terminal에 진입해 실습자료를 내려받습니다.
+#### 1-3. Terminal에 진입해 실습자료를 내려받습니다.
 
 ```bash
 git clone https://github.com/cheeunlim/multimodal-agent
@@ -74,7 +56,7 @@ git clone https://github.com/cheeunlim/multimodal-agent
 
 <br>
 
-## 3. 환경 프로비저닝
+## 2. 환경 프로비저닝
 
 ```bash
 cd ~/multimodal-agent
@@ -88,7 +70,7 @@ chmod +x ./install.sh
 | :--- | :--- | :--- |
 | 0 | 필수 GCP API 활성화 (Vector Search, Vertex AI, Cloud Run 등) | ~1분 |
 | 1 | 파이썬 패키지 설치 (`google-cloud-vectorsearch`, `google-genai` 등) | ~1분 |
-| 2 | GCS 버킷 생성 (`gs://${PROJECT_ID}-vs2`, `asia-northeast1`) | 즉시 |
+| 2 | GCS 버킷 생성 (`gs://${PROJECT_ID}-vs2`, `asia-southeast1`) | 즉시 |
 | 3 | Artifact Registry 리포 생성 (`cloud-run-source-deploy`, Part 2 배포용) | 즉시 |
 | 4 | 상품 임베딩 데이터셋 복사 | ~10초 |
 | 5 | **인덱스 빌더를 백그라운드로 구동** (`session2_index_builder.py`) | 임포트 ~10분, 이후 인덱스 |
@@ -111,17 +93,15 @@ tail -f index_builder.log
 
 # 실습
 
-## [실습 1 — 멀티모달 검색 엔진의 원리](part1/) (30분)
+## [실습 1 — 멀티모달 검색 엔진의 원리](part1/) (25분)
 
-비디오를 10초 단위로 분할하고, Gemini Embedding 2로 텍스트·이미지·비디오를 **하나의 벡터 공간**에 임베딩합니다.
-로컬에서 직접 구현한 코사인 유사도·BM25 하이브리드로 검색 원리를 확인한 뒤, 동일한 질의를 Vector Search 2.0에 요청하여
-**직접 구현했던 `alpha` 결합이 VS2에서는 RRF `weights` 설정으로 간결하게 처리되는 과정**을 확인합니다.
+비디오를 10초 단위로 분할하고, Gemini Embedding 2로 텍스트·이미지·비디오를 **하나의 3072차원 벡터 공간**에 임베딩합니다.
+코사인 유사도 비교와 **비디오 궤적 + 카테고리 텍스트 동시 t-SNE 투영**으로 멀티모달 공간을 직관적으로 확인한 뒤, 동일한 질의를 로컬 NumPy 완전탐색과 Vector Search 2.0에 각각 요청하여 결과를 대조하고 내장 RRF 하이브리드 검색·Ranking API 리랭킹까지 수행합니다.
 
 ## [실습 2 — VS2 검색 엔진과 실시간 쇼핑 에이전트](part2/) (25분 + 데모 10분)
 
-약 10만 건의 Amazon 상품 컬렉션을 대상으로 텍스트 및 이미지 질의를 수행하고, RRF 가중치 변경에 따른 검색 순위 변화를
-비교·분석합니다. 마지막으로 **실습에서 실행한 검색 호출 로직이 배포된 실시간 쇼핑 에이전트의 내부 코드와 동일함**을
-소스로 대조하고, 생성된 QR 코드를 통해 스마트폰에서 에이전트를 직접 체험합니다.
+약 10만 건(99,426건)의 Amazon 상품 컬렉션을 대상으로 텍스트 및 이미지 질의를 수행하고, RRF 가중치 변경에 따른 검색 순위 변화를
+비교·분석합니다. 마지막으로 배포된 실시간 쇼핑 에이전트의 프롬프트와 툴 호출 흐름을 확인하고, 생성된 QR 코드(및 나노바나나 테스트 이미지)를 통해 스마트폰에서 에이전트를 직접 체험합니다.
 
 > **진행 순서 안내**: `part2/README.md` 의 **Cloud Run 배포 명령을 먼저 실행**한 후 노트북 실습으로 이동합니다.
 
@@ -129,44 +109,58 @@ tail -f index_builder.log
 
 ---
 
-## 참고: 백그라운드 인덱싱 상태 점검
+## 참고: 백그라운드 인덱싱 상태 점검 및 트러블슈팅
 
 ```bash
-gcloud vector-search operations list --location=asia-northeast1 \
-  --format='value(name.basename(), done, error.message)'
+gcloud vector-search operations list --location=asia-southeast1 \
+  --format='table(name.basename():label=OPERATION_ID, done, metadata.verb:label=STEP, error.message:label=ERROR)'
 ```
 
 `install.sh` 는 총 **4개**의 장기 작업(LRO)을 만듭니다.
 
 | # | 작업 | Part 2 시작 전 완료 필요? |
 | :--- | :--- | :--- |
-| 1 | 컬렉션 생성 (`.../collections/amazon-product-768-compact`) | ✅ **필수** |
-| 2 | 데이터 임포트 (`ImportDataObjectsMetadata`) | ✅ **필수** |
+| 1 | 컬렉션 생성 (`.../collections/amazon-product-768-compact`) | ✅ **필수** (~10초) |
+| 2 | 데이터 임포트 (`ImportDataObjectsMetadata`) | ✅ **필수** (~10분) |
 | 3 | 텍스트 인덱스 생성 (`.../indexes/idx-text-embedding`) | 아니오 |
 | 4 | 이미지 인덱스 생성 (`.../indexes/idx-image-embedding`) | 아니오 |
 
-**1번과 2번 작업이 `done: true` 상태가 되면 실습 2를 바로 진행할 수 있습니다** (약 10분 소요).
+**1번과 2번 작업이 `done: True` 상태가 되면 실습 2를 바로 진행할 수 있습니다** (약 10분 소요).
 인덱스(3·4번) 생성이 진행 중이더라도 검색은 **kNN 완전탐색** 방식으로 정상 동작합니다.
-노트북 10단계에서 인덱스 생성 상태를 직접 출력하여 확인합니다.
 
 > [!NOTE]
 > **인덱스는 컬렉션당 하나씩 순차적으로 생성됩니다.** 3번 작업이 완료된 후 4번 작업이 요청되므로,
 > 진행 중에는 목록에 LRO 작업이 **최대 3개까지만** 표시되는 것이 정상입니다.
-> 10만 건 기준 인덱스 빌드에는 약 1시간 정도 소요되므로 실습 중에는 계속 진행 중일 수 있으나,
-> 검색 실습에는 영향이 없습니다.
 
-개별 작업을 자세히 보려면:
+---
 
-```bash
-gcloud vector-search operations describe <OPERATION_NAME> --location=asia-northeast1
-```
+## 🔧 자주 발생하는 에러 & 트러블슈팅 가이드
 
-### 인덱싱이 멈춘 것 같다면
+### 1. 에러 로그 확인 명령어 모음
 
-```bash
-tail -30 ~/multimodal-agent/index_builder.log
-```
+| 상황 | 확인 명령어 |
+| :--- | :--- |
+| **백그라운드 인덱스 빌더 로그 확인** | `tail -n 30 ~/multimodal-agent/index_builder.log` |
+| **Vector Search LRO 작업 상세/에러 조회** | `gcloud vector-search operations describe <OPERATION_ID> --location=asia-southeast1` |
+| **Cloud Run 에이전트 서버 로그 확인** | `gcloud run services logs read lens-mosaic --region=asia-southeast1 --limit=50` |
+| **현재 활성화된 계정 및 프로젝트 확인** | `gcloud auth list` 및 `gcloud config get-value project` |
 
-빌더 작업이 중단된 경우에도 컬렉션 및 데이터는 이미 적재되어 있을 수 있으므로,
-**`install.sh` 를 재실행하지 마시고** 강사/진행자에게 문의해 주세요
-(재실행 시 데이터가 중복 임포트될 수 있습니다).
+### 2. `409 Conflict` (`AlreadyExists` / `Aborted`) 에러가 발생할 때
+
+*   **증상 1** (`409 AlreadyExists`): 컬렉션 생성 셀이나 `install.sh`를 두 번 실행했을 때 리소스가 이미 존재하여 발생합니다.
+    *   **대처**: 실습 코드와 `session2_index_builder.py` 모두 `409 AlreadyExists`를 자동 감지해 **기존 컬렉션/데이터를 그대로 재사용**하도록 처리되어 있으므로 에러가 아니며 그대로 다음 단계를 진행하시면 됩니다.
+*   **증상 2** (`409 Aborted: unable to queue the operation`): 컬렉션 하나에는 한 번에 하나의 인덱스 생성 작업만 큐에 들어갈 수 있습니다. 앞선 작업(예: `text_embedding` 인덱스)이 진행 중일 때 다음 작업이 요청되면 발생합니다.
+    *   **대처**: `session2_index_builder.py`가 앞 인덱스 빌드가 끝날 때까지 2분 간격으로 자동 대기 후 재요청하므로 무시하셔도 됩니다.
+*   **증상 3** (`install.sh` 두 번 실행으로 인한 중복 임포트 우려):
+    *   **대처**: `install.sh`는 이미 실행 중인 `session2_index_builder.py` 프로세스가 있으면 중복 실행을 차단하며, 빌더 내부에서도 적재 건수(`COUNT > 0`)를 먼저 확인해 중복 임포트를 방지합니다.
+
+### 3. 계정 꼬임 (`403 PermissionDenied` / 프로젝트 불일치 / 에이전트 접속 끊김)
+
+*   **Workbench / 터미널 프로젝트 불일치**:
+    *   `install.sh` 실행 시 출력되는 `Active Account`와 `Project ID`가 Qwiklabs 실습 계정(`student-...` / `qwiklabs-gcp-...`)이 맞는지 확인하세요.
+    *   만약 프로젝트가 비어 있거나 다른 프로젝트로 잡혀 있다면 아래 명령으로 고정합니다:
+        ```bash
+        gcloud config set project <실습_PROJECT_ID>
+        ```
+*   **모바일 에이전트 접속 시 `Disconnected - reconnecting...` 반복**:
+    *   **확인**: 터미널에서 `gcloud run services logs read lens-mosaic --region=asia-southeast1 --limit=50`으로 서버 에러 로그를 확인하고, Vertex AI API(`aiplatform.googleapis.com`)가 활성화되어 있는지 확인하세요.

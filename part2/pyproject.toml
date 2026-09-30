@@ -13,7 +13,8 @@ dependencies = [
     "google-cloud-vectorsearch>=0.7.0",
     "google-cloud-aiplatform",
     "google-genai",
-    "google-adk[a2a]"
+    "google-adk[a2a]",
+    "a2a-sdk[http-server]>=0.3.4,<1.0.0"
 ]
 
 [build-system]
