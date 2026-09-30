@@ -9,13 +9,18 @@ from urllib.error import URLError, HTTPError
 
 def _build_fallback_agent_card(target_url: str) -> dict:
     """서버 측 a2a-sdk 버전 차이로 500 오류가 발생할 때 로컬에서 동일한 스키마의 Agent Card를 생성합니다."""
-    prompt_path = Path(__file__).parent / "app" / "prompt.py"
     instruction = "An ADK Agent"
-    if prompt_path.exists():
-        raw = prompt_path.read_text(encoding="utf-8")
-        m = re.search(r'AGENT_PROMPT\s*=\s*"""(.*?)"""', raw, re.DOTALL)
-        if m:
-            instruction = m.group(1)
+    try:
+        sys.path.insert(0, str(Path(__file__).parent))
+        from app.prompt import AGENT_PROMPT
+        instruction = AGENT_PROMPT
+    except Exception:
+        prompt_path = Path(__file__).parent / "app" / "prompt.py"
+        if prompt_path.exists():
+            raw = prompt_path.read_text(encoding="utf-8")
+            m = re.search(r'"""\\?\n?(.*?)"""', raw, re.DOTALL)
+            if m:
+                instruction = m.group(1)
 
     find_items_desc = (
         "Find shopping items that match one or more product description queries.\n\n"
